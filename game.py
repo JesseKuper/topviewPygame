@@ -1,5 +1,50 @@
 import pygame
 
+
+def startMenu(screen, screenX, screenY, selected, playTextWidth):
+    
+    mx, my=pygame.mouse.get_pos()
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+         exit()
+    playColor = exitColor = "black"
+    startPlayX = startExitX = (screenX/2) - (playTextWidth/2)
+    startPlayXcol = startExitXcol = (screenX/2) - (playTextWidth/2)
+    startPlayY = screenX/4 - 120
+    startExitY = startPlayY + 120
+    textSize = 120
+    
+    font = pygame.font.SysFont(None, textSize)
+    playTextWidth, playTextHeight = font.size("PLAY")
+    
+    if selected == 0:
+        playColor = "grey"
+        startPlayX += 40
+
+    elif selected == 1:
+        exitColor = "grey"
+        startExitX += 40
+
+
+    font = pygame.font.SysFont(None, textSize)
+    img = font.render("PLAY", True, playColor)
+    screen.blit(img, (startPlayX, startPlayY))
+
+    font = pygame.font.SysFont(None, textSize)
+    img = font.render("EXIT", True, exitColor)
+    screen.blit(img, (startExitX, startExitY))
+
+    if mx > startPlayXcol and mx < startPlayXcol + playTextWidth and my > startPlayY and my < startPlayY + playTextHeight:
+        selected = 0
+    elif mx > startExitXcol and mx < startExitXcol + playTextWidth and my > startExitY and my < startExitY + playTextHeight:
+        selected = 1
+    else: selected = 3
+    
+    
+
+    return selected, playTextWidth
+
+
 def HUD(screen, screenX, screenY, coins):
     #font = pygame.font.SysFont(None, 60)
     #img = font.render(f"Coins: {coins}", True, "black")
