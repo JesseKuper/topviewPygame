@@ -1,14 +1,5 @@
 import pygame
 from game import *
-#### To Do
-#MagicHouse
-#wild
-# hud
-#chests
-# Spritesssss
-###Nog niet aan toe, eerst sprites
-
-## MANA VOOR ROODE SHIELD
 
 
 pygame.init()
@@ -18,7 +9,8 @@ screenY = 1080
 screen = pygame.display.set_mode((screenX, screenY))
 clock = pygame.time.Clock()
 dt = clock.tick(FPS)/1000
-playing = True
+playing = False
+menu = True
 posX = 250
 posY = 150
 sizeX = 75
@@ -43,6 +35,8 @@ attack = False
 shop = 0
 use = False
 shopSel = 0
+selected = 3
+playTextWidth = 0
 
 map = [
     "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
@@ -77,9 +71,21 @@ map = [
 ]
 
 
+while menu:
+    screen.fill("white")
+    selected, playTextWidth = startMenu(screen, screenX, screenY, selected, playTextWidth)
+    pygame.display.flip()
+
+    clock.tick(FPS) 
+
+
+
+
+
+
 
 while playing:
-    coins = HUD(screen, screenX, screenY, coins)
+    coins = HUD(screen, screenX, screenY, coins) # bestaat nog niet doet nu niks
     playing, posX, posY, north, east, south, west, lastLoc, inwater, speed, attack, use, shopSel = playerMovement(
         playing, posX, posY, speed, north, east, south, west, walls, outside, listX, listY, 
         sizeX, sizeY, FPS, lastLoc, inwater, dt, attack, use, shopSel) ## PLAYER MOVEMENT VERDELEN Dit is te groot later doen
