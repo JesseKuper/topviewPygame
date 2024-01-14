@@ -66,6 +66,7 @@ e1posY = 800
 e1Health = 30
 invItems = []
 wild = False
+pausemen = False
 
 #items:
     #blocky_blood
@@ -118,15 +119,17 @@ while menu:
 
 while playing:
     coins = HUD(screen, screenX, screenY, coins) # bestaat nog niet doet nu niks
-    playing, posX, posY, north, east, south, west, lastLoc, inwater, speed, attack, use, shopSel, mb1Attack, inv = playerMovement(playing, posX, posY, speed, north, east, south, west, walls, outside, listX, listY, sizeX, sizeY, FPS, lastLoc, inwater, dt, attack, use, shopSel, mb1Attack, inv, paused) ## PLAYER MOVEMENT VERDELEN Dit is te groot later doen
+    playing, posX, posY, north, east, south, west, lastLoc, inwater, speed, attack, use, shopSel, mb1Attack, inv, pausemen = playerMovement(playing, posX, posY, speed, north, east, south, west, walls, outside, listX, listY, sizeX, sizeY, FPS, lastLoc, inwater, dt, attack, use, shopSel, mb1Attack, inv, paused, pausemen) ## PLAYER MOVEMENT VERDELEN Dit is te groot later doen
     directionX, directionY, mX, mY = playerLookDirection(posX, posY, directionX, directionY)### DOet op het moment Niks maar checkt waar muis is en geeft door of je links/ rechts/ boven enz bent van speler
     if wild:
+        
         screen.fill((2, 87, 24))#(0, 101, 168) als je weer water da wil
         if not mapCalcd:
             map = newMap()
             listX, listY, list2X, list2Y, mapCalcd = outsideCalcMap(screen, map, mapCalcd)
         grass = outsideDrawMap(screen, listX, listY, list2X, list2Y)
         wildEntrance = wildDraw(screen, screenX, screenY)
+        enemy1, e1posX, e1posY, e1Health, invItems = enemy(screen, posX, posY, outside, e1posX, e1posY, e1Health, paused, invItems, player, enemy1)
 
 
     if outside and not wild:
@@ -135,7 +138,7 @@ while playing:
             listX, listY, list2X, list2Y, mapCalcd = outsideCalcMap(screen, map, mapCalcd)
         grass = outsideDrawMap(screen, listX, listY, list2X, list2Y)
         houseEntrance, armoryEntrance, wildEntrance = outsideDraw(screen, screenX, screenY)
-        enemy1, e1posX, e1posY, e1Health, invItems = enemy(screen, posX, posY, outside, e1posX, e1posY, e1Health, paused, invItems, player, enemy1)
+        
 
     elif not outside:
         if house:
@@ -149,10 +152,16 @@ while playing:
 
     ###WERKT NIETmb1Attack = playerWeapons(mb1Attack, screen, posX, posY, mX, mY, sizeX, sizeY, directionX, directionY)
 
-    outside, house, armory, sizeX, sizeY, speed, posX, posY, use, health, e1Health, wild, mapCalcd = collissions(screen, outside, house, armory, door, player, sizeX, sizeY, houseEntrance, armoryEntrance, wildEntrance, dt, speed, posX, posY, shop, use, screenX, screenY, shopSel, enemy1, health, e1Health, shield, paused, wild, mapCalcd)
+    outside, house, armory, sizeX, sizeY, speed, posX, posY, use, health, e1Health, wild, mapCalcd, playing, menu = collissions(screen, outside, house, armory, door, player, sizeX, sizeY, houseEntrance, armoryEntrance, wildEntrance, dt, speed, posX, posY, shop, use, screenX, screenY, shopSel, enemy1, health, e1Health, shield, paused, wild, mapCalcd, playing, menu)
     if inv:
         paused = True
         inventory(screen, screenX, screenY, invItems)
+    else:
+        paused = False
+
+    if pausemen:
+        paused = True
+        pausemen, playing, menu = pauseMenu(screen, screenX, screenY, mb1Attack, pausemen, playing, menu)
     else:
         paused = False
     
