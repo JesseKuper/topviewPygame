@@ -1,29 +1,38 @@
 import pygame
+import random
 
 
-def startMenu(screen, screenX, screenY, selected, playTextWidth):
+def startMenu(screen, screenX, screenY, selected, playTextWidth, menu, playing):
     
     mx, my=pygame.mouse.get_pos()
     for event in pygame.event.get():
-      if event.type == pygame.QUIT:
-         exit()
+        if event.type == pygame.QUIT:
+            exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if selected == 0:
+                playing = True
+                menu = False
+            elif selected == 1:
+                exit()
+    
     playColor = exitColor = "black"
-    startPlayX = startExitX = (screenX/2) - (playTextWidth/2)
-    startPlayXcol = startExitXcol = (screenX/2) - (playTextWidth/2)
-    startPlayY = screenX/4 - 120
-    startExitY = startPlayY + 120
-    textSize = 120
+
+    startPlayX = startExitX = 50
+    startPlayXcol = startExitXcol = 50
+    startPlayY = screenX/4 - 250
+    startExitY = startPlayY + 200
+    textSize = 250
     
     font = pygame.font.SysFont(None, textSize)
     playTextWidth, playTextHeight = font.size("PLAY")
     
     if selected == 0:
         playColor = "grey"
-        startPlayX += 40
+        startPlayX += 100
 
     elif selected == 1:
         exitColor = "grey"
-        startExitX += 40
+        startExitX += 100
 
 
     font = pygame.font.SysFont(None, textSize)
@@ -42,16 +51,76 @@ def startMenu(screen, screenX, screenY, selected, playTextWidth):
     
     
 
-    return selected, playTextWidth
+    return selected, playTextWidth, menu, playing
 
 
-def HUD(screen, screenX, screenY, coins):
+def HUD(screen, screenX, screenY, coins): ### WRM hier niet health en mana bar!!!!!!!!!!!!!!!!!!
     #font = pygame.font.SysFont(None, 60)
     #img = font.render(f"Coins: {coins}", True, "black")
     #screen.blit(img, (20, 20))
     return coins
 
-def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, outside, listX, listY, sizeX, sizeY, FPS, lastLoc, inwater, dt, attack, use, shopSel):
+def playerLookDirection(posX, posY, directionX, directionY):
+    mX, mY =pygame.mouse.get_pos()
+    if mY - posY > 0:
+        directionY = "south"
+    else:
+        directionY = "north"
+
+    if mX - posX > 0:
+        directionX = "east"
+    else:
+        directionX = "west"
+    return directionX, directionY, mX, mY
+
+
+
+######################DOET NIKS NU ---- POGING tot een magic beam fz van speler naar muis cursor
+def playerWeapons(mb1Attack, screen, posX, posY, mX, mY, sizeX, sizeY, directionX, directionY):############ WERKT NOG niet later beter bekijken
+    XhoekA = YhoekA =XhoekB = YhoekB =XhoekC = YhoekC =XhoekD = YhoekD =  0
+    posX = posX + (sizeX/2) # de punten rood zien verkeerd uit maar ecte punt is eigelijk links boven!
+    posY = posY + (sizeY/2) 
+    NEmX = mX -960
+    NEmY = mY
+    angleX = NEmX / 5.3333
+    angleY = NEmY / 5.3333
+
+    
+    if directionX == "east" and directionY == "north":
+        XhoekA = mX - angleX
+        YhoekA = mY - angleY
+
+        XhoekB = mX + angleX
+        YhoekB = mY + angleY
+
+        XhoekD = posX
+        YhoekD = posY - 90
+
+        XhoekC = posX + 90
+        YhoekC = posY 
+
+    
+    pos = pygame.draw.rect(screen, "red", pygame.Rect(posX, posY, 10, 10))
+    Mouse = pygame.draw.rect(screen, "red", pygame.Rect(mX, mY, 10, 10))
+
+    hoekA = pygame.draw.rect(screen, "purple", pygame.Rect(XhoekA, YhoekA, 10, 10))
+    hoekB = pygame.draw.rect(screen, "purple", pygame.Rect(XhoekB, YhoekB, 10, 10))
+    hoekC = pygame.draw.rect(screen, "purple", pygame.Rect(XhoekC, YhoekC, 10, 10))
+    hoekD = pygame.draw.rect(screen, "purple", pygame.Rect(XhoekD, YhoekD, 10, 10))
+
+    #particleCount = random.randint(1, 20)
+    #particleSize = random.randint(10, 50)
+    #particleX = random.randint(200, 500)
+    #particleY = random.randint(200, 500)
+    #tel = 0
+    #if mb1Attack:
+        #while tel < particleCount:
+            #magicAttack = pygame.draw.rect(screen, "purple", pygame.Rect(particleX, particleY, particleSize, particleSize))
+            #tel+= 1
+    
+    return mb1Attack
+
+def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, outside, listX, listY, sizeX, sizeY, FPS, lastLoc, inwater, dt, attack, use, shopSel, mb1Attack, inv, paused):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             playing = False
@@ -75,6 +144,11 @@ def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, 
             if event.key == pygame.K_UP:
                 if shopSel > 0:
                     shopSel -= 1
+            if event.key == pygame.K_TAB:
+                if inv:
+                    inv = False
+                else:
+                    inv = True
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_w:
@@ -87,6 +161,12 @@ def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, 
                 west = False
             if event.key == pygame.K_SPACE:
                 attack = False
+        
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mb1Attack = True
+        
+        if event.type == pygame.MOUSEBUTTONUP:
+            mb1Attack = False
 
     if not outside:
         if (posY - walls[0]) < 25:
@@ -99,7 +179,7 @@ def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, 
             west = False
 
     if outside: 
-        if posX < 0: #SCREENX ENZ Niet VARIABLE
+        if posX < 0: #SCREENX ENZ Niet VARIABLE (ik snap niet wat ik hiermee bedoelde)
             posX += speed*1.2
         if posY < 0:
             posY += speed*1.2
@@ -128,37 +208,105 @@ def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, 
                 
     
     #elifs if no diagonal !!
-    if north:
-        posY -= speed
-    if south:
-        posY += speed
-    if east:
-        posX += speed
-    if west:
-        posX -= speed
-    return playing, posX, posY, north, east, south, west, lastLoc, inwater, speed, attack, use, shopSel
+    if not paused:
+        if north:
+            posY -= speed
+        if south:
+            posY += speed
+        if east:
+            posX += speed
+        if west:
+            posX -= speed
+    return playing, posX, posY, north, east, south, west, lastLoc, inwater, speed, attack, use, shopSel, mb1Attack, inv
+
+def drops(screen, whatdrop, eposX, eposY, invItems, player, enemy1):
+    if whatdrop == "blocky_blood":
+        blocky_blood_sprite = pygame.image.load("images/blocky_blood.png")
+        blocky_blood = pygame.draw.rect(screen, (2, 87, 24), pygame.Rect(eposX, eposY,  25, 25 ))      
+        screen.blit(blocky_blood_sprite, blocky_blood)
+    if player.colliderect(blocky_blood):
+        invItems.append(whatdrop)
+        enemy1 = "deleted"
+    return invItems, enemy1
+
+        
+
+
+def inventory(screen, screenX, screenY, invItems):
+    invBorder = pygame.draw.rect(screen, "black", pygame.Rect(400 - 10,100 - 10, screenX - 800 + 20, screenY - 200 + 20 ))
+    invBackground = pygame.draw.rect(screen, "grey", pygame.Rect(400,100, screenX - 800, screenY - 200 ))
+    textX = 400
+    textY = 100
+    for i in invItems:
+        font = pygame.font.SysFont(None, 50)
+        img = font.render(f"{i}", True, "white")
+        screen.blit(img, (textX, textY))
+        textX += 224
+        textY += 176
+    
+    #112X
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(400,286, screenX - 800, 10 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(400,463, screenX - 800, 10 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(400,639, screenX - 800, 10 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(400,815, screenX - 800, 10 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(400,991, screenX - 800, 10 ))
+    
+
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(624,100, 10, screenY - 200 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(848,100, 10, screenY - 200 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(1072,100, 10, screenY - 200 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(1296,100, 10, screenY - 200 ))
+    invgrid = pygame.draw.rect(screen, "black", pygame.Rect(1520,100, 10, screenY - 200 ))
+    
+    
+
+    
 
 
 
-
-
-def playerDraw(screen, posX, posY, sizeX, sizeY, outside, attack, health, mana, screenX, screenY):
-    if outside and attack: 
-        borderFill = pygame.draw.rect(screen, (161, 5, 33), pygame.Rect(posX -50, posY -  50, 125, 125 ))
+def playerDraw(screen, posX, posY, sizeX, sizeY, outside, attack, health, mana, screenX, screenY, paused):
+    shield = ""
+    if outside and attack and not paused: 
+        shield = pygame.draw.rect(screen, (161, 5, 33), pygame.Rect(posX -50, posY -  50, 125, 125 ))
         borderN = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX -50, posY -  50, 125, 5 ))
         borderS = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX -50, posY +  70, 125, 5 ))
         borderW = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX - 50, posY - 50, 5, 125 ))
         borderE = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX + 70, posY - 50, 5, 125 ))
+        mana -= 0.1
+    else:
+        if mana < 50 and not paused:
+            mana += 0.01
     
     player = pygame.draw.rect(screen, "white", pygame.Rect(posX, posY, sizeX, sizeY))
-    playerCol = pygame.draw.rect(screen, (47, 60, 77), pygame.Rect(posX+ 5, posY+ 5, sizeX-10, sizeY-10))
+    playerColor = pygame.draw.rect(screen, (47, 60, 77), pygame.Rect(posX+ 5, posY+ 5, sizeX-10, sizeY-10))
 
-    healthEmpty = pygame.draw.rect(screen, (156, 156, 156), pygame.Rect(screenX//2 - 255, screenY - 85, 510, 30))
+    healthEmpty = pygame.draw.rect(screen, "white", pygame.Rect(screenX//2 - 255, screenY - 85, 510, 30))
     healthMeter = pygame.draw.rect(screen, "red", pygame.Rect(screenX//2 - 250, screenY - 80, health*5, 20))
 
-    manaEmpty = pygame.draw.rect(screen, (156, 156, 156), pygame.Rect(screenX//2 - 255, screenY - 45, 510, 30))
+    manaEmpty = pygame.draw.rect(screen, "white", pygame.Rect(screenX//2 - 255, screenY - 45, 510, 30))
     manaMeter = pygame.draw.rect(screen, "blue", pygame.Rect(screenX//2 - 250, screenY - 40, mana*5, 20))
-    return player
+    return player, mana, shield
+
+def enemy(screen, posX, posY, outside, e1posX, e1posY, e1Health, paused, invItems, player, enemy1):
+    if enemy1 != "deleted":
+        enemy1 = ""
+        if e1Health > 0:
+            enHealthEmpty = pygame.draw.rect(screen, "white", pygame.Rect(e1posX - 25, e1posY - 20, 80, 10))
+            enHealthMeter = pygame.draw.rect(screen, "red", pygame.Rect(e1posX -23, e1posY - 18, e1Health*2.5333, 6))
+            enemy1 = pygame.draw.rect(screen, "red", pygame.Rect(e1posX, e1posY, 30, 30))
+            if not paused:
+                if posX > e1posX:
+                    e1posX += 2
+                else:
+                    e1posX -= 2
+
+                if posY > e1posY:
+                    e1posY += 2
+                else:
+                    e1posY -= 2
+        else:
+            invItems, enemy1 = drops(screen, "blocky_blood", e1posX, e1posY, invItems, player, enemy1)
+    return enemy1, e1posX, e1posY, e1Health, invItems
 
 
 
@@ -196,6 +344,8 @@ def outsideCalcMap(screen, map, mapCalcd):
     telY = 0
     listX = []
     listY = []
+    list2X = []
+    list2Y = []
     for i in map:
         #telY += 120
         telX = 0
@@ -205,20 +355,31 @@ def outsideCalcMap(screen, map, mapCalcd):
             if int(x) == 1:
                 listX.append(telX)
                 listY.append(telY)
+            if int(x) == 2:
+                print("HEY")
+                list2X.append(telX)
+                list2Y.append(telY)
             telX += 60
         telY += 60
     mapCalcd = True
-    print("FINISH_DWADAWDADAWDADAWDAWD")
-    return listX, listY, mapCalcd
+    return listX, listY, list2X, list2Y, mapCalcd
         
-def outsideDrawMap(screen, listX, listY):
+def outsideDrawMap(screen, listX, listY, list2X, list2Y):
     tel = 0
     while tel <= len(listX):
         try:
             mapBuild = pygame.draw.rect(screen, (0, 101, 168), pygame.Rect(listX[tel], listY[tel], 60, 60))
         except:
-            pass # er komt error 1k in de zoveel frames idk waarom
+            pass # er komt error 1k in de zoveel frames idk waarom(uhm niet meer denk ik idk wa ik bedoelde)
         tel += 1
+
+    tel2 = 0
+    while tel2 <= len(list2X):
+        try:
+            mapBuild = pygame.draw.rect(screen, (1, 46, 13), pygame.Rect(list2X[tel2], list2Y[tel2], 60, 60))
+        except:
+            pass
+        tel2 += 1
 
 def outsideDraw(screen, screenX, screenY):
     width = 0
@@ -228,7 +389,9 @@ def outsideDraw(screen, screenX, screenY):
     armory = pygame.draw.rect(screen, (46, 46, 46), pygame.Rect(400, screenY - 250, 120, 220))
     armoryEntrance = pygame.draw.rect(screen, "black", pygame.Rect(515, screenY - 90, 15, 40))
 
-    return houseEntrance, armoryEntrance
+    wildEntrance = pygame.draw.rect(screen, "black", pygame.Rect(screenX - 20, screenY/2, 20, 200))
+
+    return houseEntrance, armoryEntrance, wildEntrance
 
 def shopMenu(screen, screenX, screenY, shopSel):
     cost = 0
@@ -328,12 +491,39 @@ def shopMenu(screen, screenX, screenY, shopSel):
     screen.blit(nav1, (screenX - (screenX // 2)+ 520, (screenY // 10)+ 525+(screenY//5 )))
 
 
-def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, houseEntrance, armoryEntrance, dt, speed, posX, posY, shop, use, screenX, screenY, shopSel):
+def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, houseEntrance, armoryEntrance, wildEntrance, dt, speed, posX, posY, shop, use, screenX, screenY, shopSel, enemy1, health, e1Health, shield, paused, wild, mapCalcd):
     if outside:
+        if shield and enemy1 and not paused and enemy1 != "deleted":
+            if shield.colliderect(enemy1):
+                e1Health -= 1
+        if enemy1 and not paused and enemy1 != "deleted":
+            if player.colliderect(enemy1): 
+                health -= 1
+
+
+
+        if player.colliderect(wildEntrance):
+            if wild:
+                house = False
+                armory = False
+                outside = True
+                wild = False
+                posX = 100
+                posY = screenY/2
+                mapCalcd = False
+            elif not wild:
+                house = False
+                armory = False
+                outside = True
+                wild = True
+                posX = 100
+                posY = screenY/2
+                mapCalcd = False
         if player.colliderect(houseEntrance):
             house = True
             armory = False
             outside = False
+            wild = False
             speed = 400*dt
             sizeX = 75
             sizeY = 75
@@ -343,6 +533,7 @@ def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, hous
             house = False
             armory = True
             outside = False
+            wild = False
             speed = 400*dt
             sizeX = 75
             sizeY = 75
@@ -359,6 +550,7 @@ def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, hous
             armory = False
             house = False
             outside = True
+            wild = False
             speed = 250*dt
             sizeX = 25
             sizeY = 25
@@ -372,7 +564,7 @@ def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, hous
                     shopMenu(screen, screenX, screenY, shopSel)
             else:
                 use = False
-    return outside, house, armory, sizeX, sizeY, speed, posX, posY, use
+    return outside, house, armory, sizeX, sizeY, speed, posX, posY, use, health, e1Health, wild, mapCalcd
 
 
 exec(open("main.py").read())#### WEGHALEN IS VOOR TESTEN ZODAT F5 KAN DOEN IN DIT BESTAND
