@@ -120,7 +120,7 @@ def playerWeapons(mb1Attack, screen, posX, posY, mX, mY, sizeX, sizeY, direction
     
     return mb1Attack
 
-def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, outside, listX, listY, sizeX, sizeY, FPS, lastLoc, inwater, dt, attack, use, shopSel, mb1Attack, inv, paused):
+def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, outside, listX, listY, sizeX, sizeY, FPS, lastLoc, inwater, dt, attack, use, shopSel, mb1Attack, inv, paused, pausemen):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             playing = False
@@ -149,6 +149,11 @@ def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, 
                     inv = False
                 else:
                     inv = True
+            if event.key == pygame.K_ESCAPE:
+                if pausemen:
+                    pausemen = False
+                else:
+                    pausemen = True
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_w:
@@ -217,7 +222,7 @@ def playerMovement(playing, posX, posY, speed, north, east, south, west, walls, 
             posX += speed
         if west:
             posX -= speed
-    return playing, posX, posY, north, east, south, west, lastLoc, inwater, speed, attack, use, shopSel, mb1Attack, inv
+    return playing, posX, posY, north, east, south, west, lastLoc, inwater, speed, attack, use, shopSel, mb1Attack, inv, pausemen
 
 def drops(screen, whatdrop, eposX, eposY, invItems, player, enemy1):
     if whatdrop == "blocky_blood":
@@ -230,7 +235,27 @@ def drops(screen, whatdrop, eposX, eposY, invItems, player, enemy1):
     return invItems, enemy1
 
         
+def pauseMenu(screen, screenX, screenY, mb1Attack, pausemen, playing, menu):
+    mX, mY =pygame.mouse.get_pos()
+    
 
+    font = pygame.font.SysFont(None, 70)
+    img = font.render("Resume", True, "white")
+    screen.blit(img, (screenX/2, screenY/2 - 200))
+
+    font = pygame.font.SysFont(None, 70)
+    img = font.render("back to Menu", True, "white")
+    screen.blit(img, (screenX/2, screenY/2))
+    tXResume, tYResume = font.size("Resume")
+    tXMenu, tYMenu = font.size("back to menu")
+
+    if mX > (screenX/2) and mX < ((screenX/2) + tXResume) and mY > (screenY/2 - 200) and mY < ((screenY/2 - 200) + tYResume) and mb1Attack:
+        pausemen = False
+    if mX > (screenX/2) and mX < ((screenX/2) + tXMenu) and mY > (screenY/2) and mY < ((screenY/2) + tYMenu) and mb1Attack:
+        pausemen = False
+        playing = False
+        startMenu = True
+    return  pausemen, playing, menu
 
 def inventory(screen, screenX, screenY, invItems):
     invBorder = pygame.draw.rect(screen, "black", pygame.Rect(400 - 10,100 - 10, screenX - 800 + 20, screenY - 200 + 20 ))
@@ -266,13 +291,13 @@ def inventory(screen, screenX, screenY, invItems):
 
 def playerDraw(screen, posX, posY, sizeX, sizeY, outside, attack, health, mana, screenX, screenY, paused):
     shield = ""
-    if outside and attack and not paused: 
+    if outside and attack and not paused and mana > 0: 
         shield = pygame.draw.rect(screen, (161, 5, 33), pygame.Rect(posX -50, posY -  50, 125, 125 ))
         borderN = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX -50, posY -  50, 125, 5 ))
         borderS = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX -50, posY +  70, 125, 5 ))
         borderW = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX - 50, posY - 50, 5, 125 ))
         borderE = pygame.draw.rect(screen, (112, 0, 20), pygame.Rect(posX + 70, posY - 50, 5, 125 ))
-        mana -= 0.1
+        mana -= 0.3
     else:
         if mana < 50 and not paused:
             mana += 0.01
@@ -491,7 +516,7 @@ def shopMenu(screen, screenX, screenY, shopSel):
     screen.blit(nav1, (screenX - (screenX // 2)+ 520, (screenY // 10)+ 525+(screenY//5 )))
 
 
-def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, houseEntrance, armoryEntrance, wildEntrance, dt, speed, posX, posY, shop, use, screenX, screenY, shopSel, enemy1, health, e1Health, shield, paused, wild, mapCalcd):
+def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, houseEntrance, armoryEntrance, wildEntrance, dt, speed, posX, posY, shop, use, screenX, screenY, shopSel, enemy1, health, e1Health, shield, paused, wild, mapCalcd, playing, menu):
     if outside:
         if shield and enemy1 and not paused and enemy1 != "deleted":
             if shield.colliderect(enemy1):
@@ -499,6 +524,14 @@ def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, hous
         if enemy1 and not paused and enemy1 != "deleted":
             if player.colliderect(enemy1): 
                 health -= 1
+            if health < 0:
+                armory = False
+                house = True
+                outside = False
+                wild = False
+                menu = True
+                playing = False
+                
 
 
 
@@ -519,7 +552,7 @@ def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, hous
                 posX = 100
                 posY = screenY/2
                 mapCalcd = False
-        if player.colliderect(houseEntrance):
+        if player.colliderect(houseEntrance) and not wild:
             house = True
             armory = False
             outside = False
@@ -529,7 +562,7 @@ def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, hous
             sizeY = 75
             posX = 1520
             posY = 840
-        elif player.colliderect(armoryEntrance):
+        elif player.colliderect(armoryEntrance) and not wild:
             house = False
             armory = True
             outside = False
@@ -564,7 +597,7 @@ def collissions(screen, outside, house, armory, door, player, sizeX, sizeY, hous
                     shopMenu(screen, screenX, screenY, shopSel)
             else:
                 use = False
-    return outside, house, armory, sizeX, sizeY, speed, posX, posY, use, health, e1Health, wild, mapCalcd
+    return outside, house, armory, sizeX, sizeY, speed, posX, posY, use, health, e1Health, wild, mapCalcd, playing, menu
 
 
 exec(open("main.py").read())#### WEGHALEN IS VOOR TESTEN ZODAT F5 KAN DOEN IN DIT BESTAND
